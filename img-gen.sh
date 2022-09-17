@@ -16,7 +16,7 @@ rm -rf ".buildroot/board/arpl/p3"
 echo "Getting latest LKMs"
 if [ `ls ../redpill-lkm/output | wc -l` -eq 0 ]; then
   echo "  Downloading from github"
-  TAG=`curl -s https://api.github.com/repos/fbelavenuto/redpill-lkm/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}'`
+  TAG=`curl -s https://api.github.com/repos/Puri12/redpill-lkm/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}'`
   curl -L "https://github.com/fbelavenuto/redpill-lkm/releases/download/${TAG}/rp-lkms.zip" -o /tmp/rp-lkms.zip
   rm -rf files/board/arpl/p3/lkms/*
   unzip /tmp/rp-lkms.zip -d files/board/arpl/p3/lkms
