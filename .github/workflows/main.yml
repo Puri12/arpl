@@ -2,8 +2,8 @@ name: Build image
 
 on:
   push:
-#    branches:
-#      - main
+    branches:
+      - main
     tags:
       - v*
   workflow_dispatch:
@@ -27,6 +27,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libelf-dev qemu-utils
+          sudo cp -f files/board/arpl/overlayfs/usr/bin/yq /usr/bin/yq
 
       # Prepare buildroot for first make (for cache)
       - name: Prepare buildroot
@@ -47,7 +48,7 @@ jobs:
         id: build
         run: |
           VERSION=`<VERSION`
-          echo "::set-output name=VERSION::${VERSION}"
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           # Remove old files
           rm -rf .buildroot/output/target/opt/arpl
           rm -rf .buildroot/board/arpl/overlayfs
@@ -84,15 +85,21 @@ jobs:
           echo "Building..."
           make BR2_EXTERNAL=../external
           cd -
-          #qemu-img convert -O vmdk arpl.img arpl.vmdk
+          qemu-img convert -O vmdk arpl.img arpl-dyn.vmdk
           qemu-img convert -O vmdk -o adapter_type=lsilogic arpl.img -o subformat=monolithicFlat arpl.vmdk
 
-      # Zip image
+      # Zip image and generate checksum
       - name: Pack
         shell: bash
         run: |
           zip -9 "arpl-${{ steps.build.outputs.VERSION }}.img.zip" arpl.img
-          zip -9 "arpl-${{ steps.build.outputs.VERSION }}.vmdk.zip" arpl*.vmdk
+          zip -9 "arpl-${{ steps.build.outputs.VERSION }}.vmdk-dyn.zip" arpl-dyn.vmdk
+          zip -9 "arpl-${{ steps.build.outputs.VERSION }}.vmdk-flat.zip" arpl.vmdk arpl-flat.vmdk
+          sha256sum update-list.yml > sha256sum
+          yq '.replace | explode(.) | to_entries | map([.key])[] | .[]' update-list.yml | while read F; do
+            (cd `dirname ${F}` && sha256sum `basename ${F}`) >> sha256sum
+          done
+          yq '.replace | explode(.) | to_entries | map([.key])[] | .[]' update-list.yml | xargs zip -9j "update.zip" sha256sum update-list.yml
 
       # Upload artifact
       - name: Upload
@@ -111,6 +118,6 @@ jobs:
         with:
           files: |
             arpl-${{ steps.build.outputs.VERSION }}.img.zip
-            arpl-${{ steps.build.outputs.VERSION }}.vmdk.zip
-            .buildroot/output/images/bzImage
-            .buildroot/output/images/rootfs.cpio.xz
+            arpl-${{ steps.build.outputs.VERSION }}.vmdk-dyn.zip
+            arpl-${{ steps.build.outputs.VERSION }}.vmdk-flat.zip
+            update.zip

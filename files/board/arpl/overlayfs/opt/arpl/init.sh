@@ -69,6 +69,7 @@ MACF=`echo ${MAC} | sed 's/://g'`
 if [ ! -f "${USER_CONFIG_FILE}" ]; then
   touch "${USER_CONFIG_FILE}"
   writeConfigKey "lkm" "dev" "${USER_CONFIG_FILE}"
+  writeConfigKey "directboot" "false" "${USER_CONFIG_FILE}"
   writeConfigKey "model" "" "${USER_CONFIG_FILE}"
   writeConfigKey "build" "" "${USER_CONFIG_FILE}"
   writeConfigKey "sn" "" "${USER_CONFIG_FILE}"
@@ -82,6 +83,7 @@ if [ ! -f "${USER_CONFIG_FILE}" ]; then
   writeConfigKey "addons" "{}" "${USER_CONFIG_FILE}"
   writeConfigKey "addons.misc" "" "${USER_CONFIG_FILE}"
   writeConfigKey "addons.acpid" "" "${USER_CONFIG_FILE}"
+  writeConfigKey "modules" "{}" "${USER_CONFIG_FILE}"
   # Initialize with real MAC
   writeConfigKey "cmdline.netif_num" "1" "${USER_CONFIG_FILE}"
   writeConfigKey "cmdline.mac1" "${MACF}" "${USER_CONFIG_FILE}"
